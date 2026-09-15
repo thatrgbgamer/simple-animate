@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self';" />
+  <title>Simple Animate</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ===================================================== HOME ========= -->
+  <section class="view" id="view-home" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">Simple Animate</span>
+        <span class="brand-version" id="home-version"></span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn ghost" data-goto="shortcuts">Shortcuts</button>
+        <button class="btn ghost" data-goto="about">About</button>
+        <button class="btn site" data-site-link title="Open thatrgb.website">
+          <span class="site-dot" aria-hidden="true"></span>thatRGB
+          <svg viewBox="0 0 16 16" class="ext" aria-hidden="true"><path d="M6 2h8v8h-2V5.4L5.4 12 4 10.6 10.6 4H6V2z"/><path d="M2 4h3v2H4v8h8v-1h2v3H2V4z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="home-body">
+      <div class="home-hero">
+        <h1>Draw it frame by frame.</h1>
+        <p>A small, fast 2D animation studio: onion skinning, shapes, a hex colour picker,
+           adjustable brush and eraser, any resolution you like, and a one-click export to
+           ProRes <code>.mov</code> or H.264 <code>.mp4</code>.</p>
+      </div>
+
+      <div class="home-grid">
+        <div class="card new-project">
+          <h2>New animation</h2>
+
+          <label class="field">
+            <span>Name</span>
+            <input type="text" id="new-name" value="My Animation" maxlength="60" />
+          </label>
+
+          <div class="field">
+            <span>Resolution</span>
+            <div class="preset-row" id="resolution-presets"></div>
+          </div>
+
+          <div class="field-row">
+            <label class="field">
+              <span>Width</span>
+              <input type="number" id="new-width" min="16" max="7680" step="2" value="1920" />
+            </label>
+            <label class="field">
+              <span>Height</span>
+              <input type="number" id="new-height" min="16" max="4320" step="2" value="1080" />
+            </label>
+            <label class="field narrow">
+              <span>FPS</span>
+              <input type="number" id="new-fps" min="1" max="60" value="24" />
+            </label>
+          </div>
+
+          <div class="field">
+            <span>Background</span>
+            <div class="bg-row">
+              <input type="text" id="new-bg" class="hex-input" value="#FFFFFF" spellcheck="false" />
+              <span class="bg-chip" id="new-bg-chip"></span>
+              <div class="bg-swatches" id="new-bg-swatches"></div>
+              <label class="checkbox">
+                <input type="checkbox" id="new-bg-transparent" />
+                <span>Transparent</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn primary big" id="btn-create">Create animation</button>
+            <button class="btn big" id="btn-open">Open project…</button>
+          </div>
+        </div>
+
+        <div class="card recents">
+          <h2>Recent</h2>
+          <ul class="recent-list" id="recent-list"></ul>
+          <p class="muted small" id="recent-empty">Projects you save will show up here.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================================================== EDITOR ========= -->
+  <section class="view" id="view-editor" hidden>
+    <header class="topbar">
+      <div class="brand small">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">Simple Animate</span>
+      </div>
+      <div class="doc-title">
+        <input type="text" id="project-name" maxlength="60" spellcheck="false" />
+        <span class="dirty-dot" id="dirty-dot" title="Unsaved changes" hidden></span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn ghost" data-goto="home" title="Back to the start screen">Home</button>
+        <button class="btn" id="btn-save">Save</button>
+        <button class="btn primary" id="btn-export">Export…</button>
+        <button class="btn site" data-site-link title="Open thatrgb.website">
+          <span class="site-dot" aria-hidden="true"></span>thatRGB
+          <svg viewBox="0 0 16 16" class="ext" aria-hidden="true"><path d="M6 2h8v8h-2V5.4L5.4 12 4 10.6 10.6 4H6V2z"/><path d="M2 4h3v2H4v8h8v-1h2v3H2V4z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="editor-body">
+      <!-- ---------------------------------------------- tools ---------- -->
+      <aside class="panel left-panel">
+        <div class="panel-block">
+          <h3>Tools</h3>
+          <div class="tool-grid" id="tool-grid"></div>
+        </div>
+
+        <div class="panel-block" id="brush-block">
+          <h3><span id="size-label">Brush size</span><span class="value" id="size-value">8 px</span></h3>
+          <input type="range" id="tool-size" min="1" max="300" value="8" />
+          <div class="mini-row">
+            <input type="number" id="tool-size-num" min="1" max="300" value="8" />
+            <div class="size-preview"><span id="size-dot"></span></div>
+          </div>
+        </div>
+
+        <div class="panel-block">
+          <h3>Opacity<span class="value" id="opacity-value">100%</span></h3>
+          <input type="range" id="tool-opacity" min="1" max="100" value="100" />
+        </div>
+
+        <div class="panel-block">
+          <h3>Colour</h3>
+          <div id="color-picker"></div>
+        </div>
+
+        <div class="panel-block" id="shape-block" hidden>
+          <h3>Shape</h3>
+          <label class="checkbox"><input type="checkbox" id="shape-fill" /><span>Filled</span></label>
+          <label class="checkbox"><input type="checkbox" id="shape-center" /><span>Draw from centre</span></label>
+          <div class="mini-row" id="polygon-row" hidden>
+            <label class="field narrow"><span>Sides</span>
+              <input type="number" id="shape-sides" min="3" max="20" value="5" />
+            </label>
+          </div>
+          <p class="hint">Hold <kbd>Shift</kbd> for a perfect square / circle / 45° line.</p>
+        </div>
+
+        <div class="panel-block" id="fill-block" hidden>
+          <h3>Fill tolerance<span class="value" id="tolerance-value">32</span></h3>
+          <input type="range" id="fill-tolerance" min="0" max="128" value="32" />
+        </div>
+
+        <div class="panel-block" id="select-block" hidden>
+          <h3>Selection</h3>
+          <div class="mini-row">
+            <button class="btn full" id="btn-copy">Copy</button>
+            <button class="btn full" id="btn-cut">Cut</button>
+          </div>
+          <div class="mini-row">
+            <button class="btn full" id="btn-paste">Paste</button>
+            <button class="btn full" id="btn-delete-selection">Delete</button>
+          </div>
+          <div class="mini-row">
+            <button class="btn full" id="btn-select-all">Select all</button>
+            <button class="btn full" id="btn-deselect">Deselect</button>
+          </div>
+          <p class="hint" id="select-hint"></p>
+        </div>
+
+      </aside>
+
+      <!-- ---------------------------------------------- stage ---------- -->
+      <main class="stage-wrap" id="stage-wrap">
+        <div class="stage" id="stage">
+          <canvas id="onion-canvas"></canvas>
+          <canvas id="display-canvas"></canvas>
+        </div>
+        <div class="cursor-ring" id="cursor-ring" hidden></div>
+        <div class="stage-hud">
+          <button class="chip" id="zoom-out" title="Zoom out">−</button>
+          <button class="chip" id="zoom-fit" title="Fit to window"><span id="zoom-level">100%</span></button>
+          <button class="chip" id="zoom-in" title="Zoom in">+</button>
+          <span class="chip static" id="canvas-size-chip">1920 × 1080</span>
+          <span class="chip static" id="cursor-pos">0, 0</span>
+        </div>
+      </main>
+
+      <!-- --------------------------------------------- settings -------- -->
+      <aside class="panel right-panel">
+        <div class="panel-block">
+          <h3>
+            Onion skin
+            <label class="switch"><input type="checkbox" id="onion-enabled" checked /><span></span></label>
+          </h3>
+          <div id="onion-controls">
+            <div class="slider-row">
+              <label>Before<span class="value" id="onion-before-value">1</span></label>
+              <input type="range" id="onion-before" min="0" max="8" value="1" />
+            </div>
+            <div class="slider-row">
+              <label>After<span class="value" id="onion-after-value">1</span></label>
+              <input type="range" id="onion-after" min="0" max="8" value="1" />
+            </div>
+            <div class="slider-row">
+              <label>Opacity<span class="value" id="onion-opacity-value">45%</span></label>
+              <input type="range" id="onion-opacity" min="5" max="100" value="45" />
+            </div>
+            <div class="slider-row">
+              <label>Falloff<span class="value" id="onion-falloff-value">55%</span></label>
+              <input type="range" id="onion-falloff" min="0" max="90" value="55" />
+            </div>
+            <label class="checkbox"><input type="checkbox" id="onion-tint" checked /><span>Tint red / blue</span></label>
+            <label class="checkbox"><input type="checkbox" id="onion-loop" /><span>Wrap around the loop</span></label>
+          </div>
+        </div>
+
+        <div class="panel-block">
+          <h3>Canvas</h3>
+          <div class="field-row">
+            <label class="field"><span>Width</span><input type="number" id="canvas-width" min="16" max="7680" step="2" /></label>
+            <label class="field"><span>Height</span><input type="number" id="canvas-height" min="16" max="4320" step="2" /></label>
+          </div>
+          <label class="checkbox"><input type="checkbox" id="canvas-scale-art" checked /><span>Scale artwork to fit</span></label>
+          <button class="btn full" id="btn-resize">Apply resolution</button>
+          <div class="field">
+            <span>Background</span>
+            <div class="bg-row compact">
+              <input type="text" id="canvas-bg" class="hex-input" spellcheck="false" />
+              <span class="bg-chip" id="canvas-bg-chip"></span>
+              <label class="checkbox"><input type="checkbox" id="canvas-bg-transparent" /><span>None</span></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-block">
+          <h3>Playback</h3>
+          <div class="field-row">
+            <label class="field narrow"><span>FPS</span><input type="number" id="project-fps" min="1" max="60" value="24" /></label>
+            <label class="checkbox stacked"><input type="checkbox" id="loop-playback" checked /><span>Loop</span></label>
+          </div>
+          <p class="muted small" id="duration-hint"></p>
+        </div>
+
+        <div class="panel-block">
+          <h3>History</h3>
+          <div class="mini-row">
+            <button class="btn full" id="btn-undo">Undo</button>
+            <button class="btn full" id="btn-redo">Redo</button>
+          </div>
+          <button class="btn full danger-ghost" id="btn-clear-frame">Clear frame</button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ----------------------------------------------- timeline -------- -->
+    <footer class="timeline">
+      <div class="transport">
+        <button class="chip" id="btn-first" title="First frame">⏮</button>
+        <button class="chip" id="btn-prev" title="Previous frame (,)">◀</button>
+        <button class="chip play" id="btn-play" title="Play / pause (Space)">▶</button>
+        <button class="chip" id="btn-next" title="Next frame (.)">▶|</button>
+        <button class="chip" id="btn-last" title="Last frame">⏭</button>
+        <span class="frame-counter" id="frame-counter">1 / 1</span>
+      </div>
+      <div class="frame-strip" id="frame-strip"></div>
+      <div class="frame-actions">
+        <button class="chip" id="btn-frame-add" title="Add empty frame">+ Frame</button>
+        <button class="chip" id="btn-frame-duplicate" title="Duplicate frame (Ctrl/Cmd+D)">Duplicate</button>
+        <button class="chip" id="btn-frame-delete" title="Delete frame">Delete</button>
+      </div>
+    </footer>
+  </section>
+
+  <!-- =================================================== EXPORT ========= -->
+  <section class="view" id="view-export" hidden>
+    <header class="topbar">
+      <div class="brand small">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">Simple Animate</span>
+      </div>
+      <div class="doc-title static">Export</div>
+      <div class="topbar-actions">
+        <button class="btn ghost" data-goto="editor">Back to editor</button>
+        <button class="btn site" data-site-link title="Open thatrgb.website">
+          <span class="site-dot" aria-hidden="true"></span>thatRGB
+          <svg viewBox="0 0 16 16" class="ext" aria-hidden="true"><path d="M6 2h8v8h-2V5.4L5.4 12 4 10.6 10.6 4H6V2z"/><path d="M2 4h3v2H4v8h8v-1h2v3H2V4z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="export-body">
+      <div class="card export-card">
+        <h2>Export animation</h2>
+
+        <div class="field">
+          <span>Format</span>
+          <div class="format-list" id="format-list"></div>
+        </div>
+
+        <div class="field-row">
+          <label class="field"><span>Width</span><input type="number" id="export-width" min="16" max="7680" step="2" /></label>
+          <label class="field"><span>Height</span><input type="number" id="export-height" min="16" max="4320" step="2" /></label>
+          <label class="field narrow"><span>FPS</span><input type="number" id="export-fps" min="1" max="60" /></label>
+        </div>
+
+        <div class="mini-row wrap">
+          <label class="checkbox"><input type="checkbox" id="export-link-aspect" checked /><span>Lock aspect ratio</span></label>
+          <button class="chip" data-scale="0.5">½×</button>
+          <button class="chip" data-scale="1">1×</button>
+          <button class="chip" data-scale="2">2×</button>
+          <label class="checkbox"><input type="checkbox" id="export-transparent" /><span>Transparent background</span></label>
+        </div>
+
+        <div class="field">
+          <span>Save to</span>
+          <div class="path-row">
+            <input type="text" id="export-path" readonly placeholder="Choose a destination…" />
+            <button class="btn" id="btn-choose-path">Browse…</button>
+          </div>
+        </div>
+
+        <p class="muted small" id="export-summary"></p>
+
+        <div class="progress" id="export-progress" hidden>
+          <div class="progress-bar"><div class="progress-fill" id="export-progress-fill"></div></div>
+          <span class="progress-text" id="export-progress-text">Rendering…</span>
+        </div>
+
+        <p class="export-error" id="export-error" hidden></p>
+
+        <div class="actions">
+          <button class="btn primary big" id="btn-run-export">Export</button>
+          <button class="btn big" id="btn-cancel-export" hidden>Cancel</button>
+          <button class="btn big" id="btn-reveal" hidden>Show in folder</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================ SHORTCUTS ========= -->
+  <section class="view" id="view-shortcuts" hidden>
+    <header class="topbar">
+      <div class="brand small">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">Simple Animate</span>
+      </div>
+      <div class="doc-title static">Keyboard shortcuts</div>
+      <div class="topbar-actions">
+        <button class="btn ghost" data-goto="back">Back</button>
+        <button class="btn site" data-site-link title="Open thatrgb.website">
+          <span class="site-dot" aria-hidden="true"></span>thatRGB
+          <svg viewBox="0 0 16 16" class="ext" aria-hidden="true"><path d="M6 2h8v8h-2V5.4L5.4 12 4 10.6 10.6 4H6V2z"/><path d="M2 4h3v2H4v8h8v-1h2v3H2V4z"/></svg>
+        </button>
+      </div>
+    </header>
+    <div class="doc-body">
+      <div class="card"><h2>Drawing</h2><ul class="shortcuts" id="shortcuts-drawing"></ul></div>
+      <div class="card"><h2>Frames &amp; playback</h2><ul class="shortcuts" id="shortcuts-frames"></ul></div>
+      <div class="card"><h2>File &amp; view</h2><ul class="shortcuts" id="shortcuts-file"></ul></div>
+    </div>
+  </section>
+
+  <!-- ==================================================== ABOUT ========= -->
+  <section class="view" id="view-about" hidden>
+    <header class="topbar">
+      <div class="brand small">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">Simple Animate</span>
+      </div>
+      <div class="doc-title static">About</div>
+      <div class="topbar-actions">
+        <button class="btn ghost" data-goto="back">Back</button>
+        <button class="btn site" data-site-link title="Open thatrgb.website">
+          <span class="site-dot" aria-hidden="true"></span>thatRGB
+          <svg viewBox="0 0 16 16" class="ext" aria-hidden="true"><path d="M6 2h8v8h-2V5.4L5.4 12 4 10.6 10.6 4H6V2z"/><path d="M2 4h3v2H4v8h8v-1h2v3H2V4z"/></svg>
+        </button>
+      </div>
+    </header>
+    <div class="doc-body">
+      <div class="card about-card">
+        <span class="brand-mark big" aria-hidden="true"></span>
+        <h2>Simple Animate <span class="muted" id="about-version"></span></h2>
+        <p>A 2D frame-by-frame animation studio. Draw, flip, and export a real video file —
+           nothing else to install.</p>
+        <ul class="feature-list">
+          <li>Adjustable onion skin: frames before and after, opacity, falloff, red/blue tint.</li>
+          <li>Brush, eraser, line, rectangle, ellipse, triangle, polygon, paint bucket, eyedropper.</li>
+          <li>Hex colour picker with saturation/value field, hue slider and recent swatches.</li>
+          <li>Any canvas resolution, resizable at any time, with artwork scaling.</li>
+          <li>Export to ProRes .mov (best quality, alpha optional), H.264 .mp4, or a PNG sequence.</li>
+        </ul>
+        <p class="muted small" id="about-runtime"></p>
+        <button class="btn primary" data-site-link>Visit thatrgb.website</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="toast-stack" id="toast-stack"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

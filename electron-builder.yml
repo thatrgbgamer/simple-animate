@@ -1,0 +1,76 @@
+appId: website.thatrgb.simpleanimate
+productName: Simple Animate
+copyright: Copyright © 2026 ThatRGBGamer
+
+directories:
+  buildResources: build
+  output: dist
+
+files:
+  - package.json
+  - src/**/*
+  - build/icon.png
+  - "!**/*.map"
+  - "!**/{.DS_Store,.git,.github,docs,scripts,dist}"
+
+# ffmpeg has to stay a real file on disk — it cannot be executed from inside the asar.
+asarUnpack:
+  - "**/node_modules/ffmpeg-static/**"
+
+extraMetadata:
+  main: src/main/main.js
+
+win:
+  icon: build/icon.ico
+  artifactName: ${productName}-${version}-Windows-${arch}.${ext}
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+    - target: portable
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Simple Animate
+  uninstallDisplayName: Simple Animate ${version}
+
+portable:
+  artifactName: ${productName}-${version}-Windows-Portable.${ext}
+
+mac:
+  icon: build/icon.icns
+  category: public.app-category.graphics-design
+  artifactName: ${productName}-${version}-macOS-${arch}.${ext}
+  darkModeSupport: true
+  gatekeeperAssess: false
+  hardenedRuntime: false
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+    - target: zip
+      arch: [x64, arm64]
+
+dmg:
+  title: Simple Animate ${version}
+  contents:
+    - x: 140
+      y: 190
+      type: file
+    - x: 400
+      y: 190
+      type: link
+      path: /Applications
+
+linux:
+  icon: build/icon.png
+  category: Graphics
+  artifactName: ${productName}-${version}-Linux-${arch}.${ext}
+  target:
+    - target: AppImage
+      arch: [x64]
+
+compression: normal
